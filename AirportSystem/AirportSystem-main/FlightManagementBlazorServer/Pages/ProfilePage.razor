@@ -1,0 +1,67 @@
+﻿@page "/ProfilePage/{UserId}"
+@inject UserService _userService;
+@inject NavigationManager _navigationManager;
+
+<h3>Profile Page</h3>
+
+<div style="text-align: right;">
+    <button type="button" class="btn btn-secondary" @onclick="LogOut">
+        <span class="oi oi-account-logout"></span>
+        Log out
+    </button>
+</div>
+
+<p>Current user: @User.Username</p>
+
+@if (IsAdmin(User))
+{
+    <div>
+        <button type="button" class="btn btn-secondary" @onclick="OpenAddUserPage">
+            <span class="oi oi-person"></span>
+            Add New User
+        </button>
+    </div>
+}
+ &nbsp;
+<div>
+    <button type="button" class="btn btn-primary" @onclick="OpenFlightsPage">
+        <span class="oi oi-arrow-right"></span>
+        Open Flights Page
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+
+    public User User { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        User = new User();
+        User = await _userService.GetUserAsync(int.Parse(UserId));
+    }
+
+    private bool IsAdmin(User user)
+    {
+        if ((int)user.Role == 1)
+            return true;
+
+        else return false;
+    }
+
+    private void OpenAddUserPage()
+    {
+        _navigationManager.NavigateTo($"/AddUser/{User.Id}");
+    }
+
+    private void LogOut()
+    {
+        _navigationManager.NavigateTo("/");
+    }
+
+    private void OpenFlightsPage()
+    {
+        _navigationManager.NavigateTo($"/FlightList/{User.Id}");
+    }
+}

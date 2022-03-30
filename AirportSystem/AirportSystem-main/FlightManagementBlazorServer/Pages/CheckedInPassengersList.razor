@@ -1,0 +1,66 @@
+﻿@page "/CheckedInPassengersList/{FlightId}/{UserId}"
+@inject PassengerService _passengerService;
+@inject NavigationManager _navigationManager;
+@inherits PassengerListBase;
+
+<h3>Checked In Passengers</h3>
+
+@if (Passengers == null)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <table class="table table-responsive">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Gender</th>
+                <th>Seat</th>
+                <th>Full name in document</th>
+                <th>Document type</th>
+                <th>Document number</th>
+                <th>Document expiration date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var passenger in Passengers)
+            {
+                <tr>
+                    <td>@passenger.Name</td>
+                    <td>@passenger.Surname</td>
+                    <td>@passenger.Gender</td>
+                    <td>@passenger.Seat</td>
+                    <td>@passenger.NameInDocument @passenger.SurnameInDocument</td>
+                    <td>@passenger.DocumentType</td>
+                    <td>@passenger.DocumentNumber</td>
+                    <td>@passenger.DocumentExpirationDate.ToString("dd.MM.yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary" @onclick="Close">
+        <span class="oi oi-media-skip-backward"></span>
+        Close
+    </button>
+}
+
+@code {
+    [Parameter]
+    public string FlightId { get; set; }
+    [Parameter]
+    public string UserId { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Passengers = await _passengerService.GetCheckedInPassengersAsync(int.Parse(FlightId));
+    }
+
+    private void Close()
+    {
+        _navigationManager.NavigateTo($"/FlightList/{UserId}");
+    }
+}

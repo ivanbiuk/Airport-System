@@ -1,0 +1,21 @@
+﻿<div class="userFields">
+    <label for="userName">Username</label>
+    <InputText id="userName" @bind-Value="@User.Username" class="form-control"></InputText>
+
+    <label for="userPasword">Password</label>
+    <InputText id="userPassword" @bind-Value="@User.Password" class="form-control"></InputText>
+
+    <label for="userRole">Role</label>
+    <InputSelect id="userRole" @bind-Value="@User.Role" class="form-control">
+
+        @foreach (var role in Enum.GetValues(typeof(UserRoles)))
+        {
+            <option value="@role">@role</option>
+        }
+    </InputSelect>
+</div>
+
+@code {
+    [Parameter]
+    public User User { get; set; } 
+    }

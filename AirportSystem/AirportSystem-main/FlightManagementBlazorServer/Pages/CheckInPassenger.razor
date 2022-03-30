@@ -1,0 +1,133 @@
+﻿@page "/CheckInPassenger/{PassengerId}/{UserId}"
+@inject PassengerService _passengerService;
+@inject NavigationManager _navigationManager;
+@inherits PassengerListBase;
+
+<h3>Check In Passenger</h3>
+@if (Passenger == null)
+{
+    <p>Loading...</p>
+}
+
+else
+{
+<EditForm Model="@Passenger">
+    <label for="passengerSeat">Seat</label>
+    <InputText id="passengerSeat" @bind-Value="@Passenger.Seat" class="form-control"></InputText>
+    <div>
+        <p>Document Details:</p>
+    </div>
+
+    <label for="nameInDocument">First name in document</label>
+    <InputText id="nameInDocument" @bind-Value="@Passenger.NameInDocument" class="form-control"></InputText>
+
+    <label for="surnameInDocument">Last name in document</label>
+    <InputText id="surnameInDocument" @bind-Value="@Passenger.SurnameInDocument" class="form-control"></InputText>
+
+    <label for="documentType">Document type</label>
+    <InputSelect id="documentType" @bind-Value="@Passenger.DocumentType" class="form-control">
+        @foreach (var type in Enum.GetValues(typeof(DocumentTypes)))
+            {
+            <option value="@type">@type</option>
+            }
+    </InputSelect>
+
+    <label for="documentNumber">Document number</label>
+    <InputText id="documentNumber" @bind-Value="@Passenger.DocumentNumber" class="form-control"></InputText>
+
+    <label for="documentExpirationDate">Document expiration date</label>
+    <InputDate id="documentExpirationDate" @bind-Value="@Passenger.DocumentExpirationDate" class="form-control"></InputDate>
+
+    &nbsp;
+    <button type="button" class="btn btn-primary" @onclick="() => CheckInPassengerAsync(Passenger.Id)">
+        <span class="oi oi-circle-check"></span>
+        Check In
+    </button>
+
+    <button type="button" class="btn btn-secondary" @onclick="Close">
+        <span class="oi oi-media-skip-backward"></span>
+        Close
+    </button>
+</EditForm>
+}
+
+<NotificationDialog @ref="NotificationDialog" Description="@ConcatenatedValidationErrors" NotificationType="Error"></NotificationDialog>
+
+@code {
+    [Parameter]
+    public string PassengerId { get; set; }
+    [Parameter]
+    public string UserId { get; set; }
+
+    public Passenger Passenger { get; set; }
+    public NotificationDialog NotificationDialog { get; set; }
+    public List<ValidationError> ValidationErrors { get; set; }
+    public String ConcatenatedValidationErrors { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Passenger = await _passengerService.GetPassengerAsync(int.Parse(PassengerId));
+        Passenger.DocumentExpirationDate = DateTime.Now;
+    }
+
+    private async Task CheckInPassengerAsync(int passengerId)
+    {
+        ValidationErrors = ValidatePassenger();
+        if (ValidationErrors.Any())
+        {
+            ConcatenatedValidationErrors = GetConcatenatedValidationErrors(ValidationErrors);
+            NotificationDialog.Show();
+        }
+        else
+        {
+
+            await _passengerService.CheckInPassengerAsync(passengerId);
+            await _passengerService.UpdatePassengerAsync(Passenger);
+            Close();
+        }
+    }
+
+
+    private void Close()
+    {
+        _navigationManager.NavigateTo($"/FlightList/{UserId}");
+    }
+
+    private List<ValidationError> ValidatePassenger()
+    {
+        var validationErrors = new List<ValidationError>();
+        if (String.IsNullOrWhiteSpace(Passenger.Seat))
+            validationErrors.Add(new ValidationError { Description = "Please enter a Seat Number!" });
+
+        if (String.IsNullOrWhiteSpace(Passenger.NameInDocument))
+            validationErrors.Add(new ValidationError { Description = "Please enter passenger's first name in document!" });
+
+        if (String.IsNullOrWhiteSpace(Passenger.SurnameInDocument))
+            validationErrors.Add(new ValidationError { Description = "Please enter passenger's last name in document!" });
+
+        if ((int)Passenger.DocumentType != 1 && (int)Passenger.DocumentType != 2)
+            validationErrors.Add(new ValidationError { Description = "Please select a document type!" });
+
+        if (String.IsNullOrWhiteSpace(Passenger.DocumentNumber))
+            validationErrors.Add(new ValidationError { Description = "Please enter passenger's document number!" });
+
+        return validationErrors;
+
+    }
+
+    private string GetConcatenatedValidationErrors(List<ValidationError> ValidationErrors)
+    {
+        StringBuilder message = new StringBuilder();
+        foreach (var error in ValidationErrors)
+        {
+            if (message.Length == 0)
+                message.Append(error.Description);
+            else
+                message.Append($"{Environment.NewLine} {error.Description}");
+
+        }
+        return message.ToString();
+    }
+
+}
+

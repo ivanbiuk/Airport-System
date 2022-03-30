@@ -1,0 +1,74 @@
+﻿@page "/PassengerList/{flightId}/{UserId}"
+@inject PassengerService _passengerService;
+@inject NavigationManager _navigationManager;
+@inherits PassengerListBase;
+
+<h3>Passenger List</h3>
+@if (Passengers == null)
+{
+    <div>Loading...</div>
+}
+else
+{
+    <table class="table table-responsive">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Surname</th>
+                <th>Gender</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var passenger in Passengers)
+            {
+                <tr>
+                    <td>@passenger.Name</td>
+                    <td>@passenger.Surname</td>
+                    <td>@passenger.Gender</td>
+                    <td>
+                        @if (passenger.IsChecked == false)
+                        {
+                            <button type="button" class="btn btn-primary" @onclick="() => OpenCheckInPassengerPage(passenger.Id, int.Parse(UserId))">
+                                <span class="oi oi-circle-check"></span>
+                                Check In
+                            </button>
+                        }
+
+
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-primary" @onclick="() => OpenEditPassengerPage(passenger.Id, int.Parse(UserId))">
+                            <span class="oi oi-pencil"></span>
+                        </button>
+
+                        <button type="button" class="btn btn-danger" @onclick="() => DeletePassengerAsync(passenger.Id, int.Parse(FlightId))">
+                            <span class="oi oi-delete"></span>
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="button" class="btn btn-secondary" @onclick="Close">
+        <span class="oi oi-media-skip-backward"></span>
+        Close
+    </button>
+}
+
+@code {
+    [Parameter]
+    public string FlightId { get; set; }
+    [Parameter]
+    public string UserId { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Passengers = await _passengerService.GetPassengersAsync(int.Parse(FlightId));
+    }
+
+    private void Close()
+    {
+        _navigationManager.NavigateTo($"/FlightList/{UserId}");
+    }
+}
